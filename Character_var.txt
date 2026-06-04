@@ -1,0 +1,8 @@
+default grisha = Character("Гриша" ,color="#c8ffc8")
+default sasha = Character("Саша" ,color="#fff")
+default kirill = Character("Кирилл" ,color="#c8ffc8")
+default andrey = Character("Андрей" ,color="#c8ffc8")
+
+default rasskaz = Character("rasskaz")
+
+
