@@ -1,0 +1,236 @@
+# ============================================
+# ПРОЛОГ: ТОЧКА НЕВОЗВРАТА
+# ============================================
+
+# --- ОБЪЯВЛЕНИЕ ПЕРСОНАЖЕЙ ---
+define sasha = Character("Саша", who_color="#c8e7ff")
+define grisha = Character("Гриша", who_color="#b5e3a1")
+define andrey = Character("Андрей", who_color="#f7d44a")
+define curator = Character("Куратор", who_color="#ffaa66")
+define narrator = Character(None, kind=nvl)
+
+# --- ПЕРЕМЕННЫЕ ДЛЯ СЮЖЕТА ---
+default crypto_solved = False
+default code_attempts = 0
+default player_answer = ""
+
+# --- ТРАНСФОРМАЦИИ ДЛЯ ПОЗИЦИЙ ПЕРСОНАЖЕЙ ---
+transform left:
+    xalign 0.05
+    yalign 1.0
+
+transform center:
+    xalign 0.5
+    yalign 1.0
+
+transform right:
+    xalign 0.95
+    yalign 1.0
+
+# --- ЭКРАН МИНИ-ИГРЫ: ШИФР ЦЕЗАРЯ ---
+screen caesar_cipher():
+    modal True
+    zorder 100
+    frame:
+        xalign 0.5 yalign 0.4
+        xsize 600
+        background Solid("#2c3e50")
+        padding (20,20)
+        vbox:
+            spacing 15
+            text "Расшифруйте сообщение:" style "game_text"
+            text "Wkh FDHVDU LV UHDGB" style "cipher_text"
+            text "Известен сдвиг: 3" style "game_text_small"
+            null height 10
+            input:
+                id "cipher_input"
+                value VariableInputValue("player_answer")
+                length 30
+                style "input_style"
+            null height 10
+            hbox:
+                spacing 20
+                textbutton "Проверить":
+                    action If(player_answer.strip() == "The Caesar is ready",
+                        [SetVariable("crypto_solved", True), Return()],
+                        [SetVariable("code_attempts", code_attempts+1), Show("wrong_answer")])
+                textbutton "Подсказка":
+                    action Show("hint_caesar")
+                textbutton "Выйти в меню":
+                    action MainMenu()
+
+screen wrong_answer():
+    zorder 200
+    frame:
+        xalign 0.5 yalign 0.3
+        background "#e74c3c"
+        padding (20,10)
+        text "Неверно! Попробуйте ещё раз." size 24
+        timer 2.0 action Hide("wrong_answer")
+
+screen hint_caesar():
+    zorder 200
+    frame:
+        xalign 0.5 yalign 0.3
+        background "#f39c12"
+        padding (20,10)
+        text "Подсказка: Сдвиг 3 означает, что каждая буква сдвинута назад на 3 позиции. В английском алфавите. Правильный ответ: The Caesar is ready (без точки в конце)."
+        timer 4.0 action Hide("hint_caesar")
+
+# --- СТИЛИ ДЛЯ ЭКРАНОВ ---
+style game_text:
+    size 22
+    color "#ecf0f1"
+style cipher_text:
+    size 28
+    color "#f1c40f"
+    bold True
+style game_text_small:
+    size 18
+    color "#bdc3c7"
+style input_style:
+    size 20
+    color "#000000"
+    background "#ecf0f1"
+    xfill True
+
+# ============================================
+# ГЛАВНАЯ МЕТКА START
+# ============================================
+label start:
+    call prologue
+    return
+
+# ============================================
+# ПРОЛОГ
+# ============================================
+label prologue:
+    scene bg classroom with fade
+    show sasha normal at left
+    show grisha happy at center
+    show andrey think at right
+
+    sasha "Ну вот и всё... Последний звонок. А я так и не знаю, куда поступать."
+
+    grisha "Эх, Саша, вечная твоя проблема! Зато я уже решил: хочу в этичный хакинг, багбаунти, чтобы системы падали от моего кода!"
+
+    andrey "Гриша, ты как всегда. Хакинг – это не игрушки. Я вот уже подал документы в политех на прикладную математику. Надёжно, скучно, зато бюджет."
+
+    sasha "А мне вообще ничего не нравится... Или нравится, но не знаю что."
+
+    $ choice = ""
+    menu:
+        "Что ответить друзьям?"
+        "Может, в Ростов поедем?":
+            $ choice = "rostov"
+            sasha "Ребята, может, в Ростов? Говорят, там сильный IT-вуз."
+        "Слышал про какой-то квест в РИНХе.":
+            $ choice = "kvest"
+            sasha "Слушайте, я краем уха слышал про какой-то квест в РГЭУ. Что-то связанное с программированием."
+        "Лучше останемся в городе.":
+            $ choice = "gorod"
+            sasha "Наверное, останусь здесь. Вон мама говорит, что бухгалтер – профессия на века."
+
+    if choice == "gorod":
+        jump bad_end_early
+
+    grisha "О! Точно! Мне тут в почтовый ящик подбросили странную флешку с логотипом РГЭУ."
+
+    show grisha excited at center
+    grisha "Давайте посмотрим!"
+
+    scene black with fade
+    "Гриша достаёт флешку. Все трое подходят к школьному компьютеру."
+
+    scene bg computer_lab with fade
+    show sasha normal at left
+    show grisha excited at center
+    show andrey think at right
+
+    andrey "Осторожно! Мало ли что на флешке... Вдруг вирус?"
+
+    grisha "Да ладно, мы ж не в госучреждении."
+
+    narrator "На флешке обнаруживается один текстовый файл: «message.txt». В нём зашифрованное сообщение."
+
+    show screen caesar_cipher
+    $ renpy.pause()
+    hide screen caesar_cipher
+
+    if crypto_solved:
+        # Вывод расшифрованного сообщения (без наложения)
+        narrator "Сообщение расшифровано! На экране появляется текст:"
+        $ renpy.pause(0.5)
+        narrator "«Добро пожаловать на \"Цифровой вызов\"."
+        $ renpy.pause(0.5)
+        narrator "Приходите в субботу в корпус КТиИБ по адресу: ул. Социалистическая, 79."
+        $ renpy.pause(0.5)
+        narrator "Вас ждут три испытания."
+        $ renpy.pause(0.5)
+        narrator "Победители получат дополнительные баллы и гарантированное место.»"
+        $ renpy.pause(0.5)
+        
+        # Принудительная очистка окна перед появлением персонажей и меню
+        window hide
+        $ renpy.pause(0.3)
+        window show
+
+        show andrey surprise at right
+        andrey "Это что, розыгрыш?"
+        grisha "Розыгрыш? Это шанс! Саша, ты как?"
+
+        # Очистка перед меню (чтобы меню было в отдельном окне)
+        window hide
+        $ renpy.pause(0.3)
+        window show
+
+        $ choice2 = ""
+        menu:
+            "Пойти на квест в КТиИБ?"
+            "Пойдём, конечно!":
+                $ choice2 = "go"
+                sasha "Да, пойдём! Что мы теряем?"
+            "Нет, это опасно...":
+                $ choice2 = "no"
+                sasha "Не знаю... Может, не стоит?"
+
+        if choice2 == "no":
+            jump bad_end_coward
+        else:
+            jump first_episode
+    else:
+        "Увы, вы не смогли расшифровать сообщение. Гриша в отчаянии стирает флешку."
+        grisha "Ладно, видимо, не судьба."
+        jump bad_end_crypt_fail
+
+# --- ПЛОХИЕ КОНЦОВКИ ---
+label bad_end_early:
+    scene bg classroom with dissolve
+    show sasha normal at center
+    sasha "Остаюсь в городе. Буду бухгалтером, как мама..."
+    "Проходит 5 лет. Саша ненавидит свою работу, листая новости о студентах КТиИБ, выигравших хакатон."
+    "Упущенный шанс навсегда."
+    return
+
+label bad_end_coward:
+    scene bg corridor with fade
+    show sasha normal at center
+    sasha "Я струсил. А Гриша с Андреем пошли на квест без меня."
+    "Позже я узнал, что они поступили на КТиИБ, а я так и не нашёл себя."
+    return
+
+label bad_end_crypt_fail:
+    scene bg classroom with dissolve
+    show grisha happy at left
+    show andrey think at right
+    grisha "Эх, жаль. Может, это знак, что не наше?"
+    andrey "Ну, тогда в политех. Предсказуемо, зато стабильно."
+    show sasha normal at center
+    sasha "А я... я так и не понял, чего хочу."
+    "Саша до сих пор не знает, куда поступать."
+    return
+
+label first_episode:
+    scene black
+    "Продолжение следует... Эпизод 1: Криптографический лабиринт"
+    return
